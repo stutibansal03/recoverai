@@ -68,5 +68,24 @@ print()
 print("Outcomes:")
 for outcome, count in outcome_counts.items():
     print(f"  {outcome}: {count}")
+    divergent = [r for r in records if r["llm_used"] and r["baseline_action"] != r["final_action"]]
+
+print()
+print("AI vs BASELINE (ambiguous cases only):")
+print(f"  Cases where AI judgment differed from the deterministic default: {len(divergent)} / {sum(1 for r in records if r['llm_used'])}")
+print()
+print("Sample decisions with full reasoning:")
+samples = records[:3] + divergent[:2]
+seen = set()
+for r in samples:
+    if r["customer_id"] in seen:
+        continue
+    seen.add(r["customer_id"])
+    print(f"  [{r['customer_id']}] {r['failure_reason']} (retry #{r['retry_count']}, tenure {r['customer_tenure_months']}mo, Rs{r['amount']})")
+    print(f"    Baseline would do:  {r['baseline_action']}")
+    print(f"    Final decision:     {r['final_action']} {'(AI judgment)' if r['llm_used'] else '(rule-based)'}")
+    print(f"    Reasoning: {r['final_reasoning']}")
+    print(f"    Outcome: {r['outcome']}")
+    print()
 print("=" * 50)
 print("Full audit trail saved to data/audit_trail.json")
